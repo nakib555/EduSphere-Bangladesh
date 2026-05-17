@@ -1,0 +1,8 @@
+{
+  "name": "EduSphere Bangladesh",
+  "description": "A centralized platform that accurately matches Bangladeshi students with local and global universities using a Smart Profile Builder and Eligibility Checker.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
