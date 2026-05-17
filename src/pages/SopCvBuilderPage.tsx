@@ -8,7 +8,7 @@ export function SopCvBuilderPage() {
   const [activeTab, setActiveTab] = useState<'sop' | 'cv'>('sop');
 
   return (
-    <div className="flex-1 w-full bg-slate-50">
+    <div className="flex-1 w-full bg-slate-50 pb-12 sm:pb-16">
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-primary-950 py-20 lg:py-28 rounded-b-[2.5rem] lg:rounded-b-[4rem] shadow-xl">
         <div className="absolute inset-0 overflow-hidden">

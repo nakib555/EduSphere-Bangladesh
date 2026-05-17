@@ -305,12 +305,12 @@ export function LandingPage() {
               
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
                 <Link to="/build-profile" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-base bg-white text-primary-900 hover:bg-slate-100 shadow-xl border-none">
+                  <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-base bg-white dark:bg-white text-primary-900 border-none hover:bg-slate-100 shadow-xl">
                     Create Free Profile <ArrowRight className="ml-2 w-5 h-5"/>
                   </Button>
                 </Link>
                 <Link to="/login" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-base border border-white/30 text-white hover:bg-white/10 hover:text-white bg-transparent">
+                  <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-base border-white/30 text-white bg-transparent hover:bg-white/10">
                     Log in account
                   </Button>
                 </Link>

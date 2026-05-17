@@ -39,7 +39,7 @@ export function ProfileBuilderPage() {
   const stepIcons = [User, GraduationCap, Award, Map];
 
   return (
-    <div className="flex-1 w-full bg-slate-50 relative">
+    <div className="flex-1 w-full bg-slate-50 pb-12 sm:pb-16 relative">
       
       {/* Decorative Top Background */}
       <div className="absolute top-0 left-0 right-0 h-96 bg-primary-950 overflow-hidden rounded-b-[3rem] shadow-2xl shadow-primary-900/20 z-0">

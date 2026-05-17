@@ -62,7 +62,7 @@ export function UniversityDetailsPage() {
   });
 
   return (
-    <div className="flex-1 w-full bg-slate-50">
+    <div className="flex-1 w-full bg-slate-50 pb-12 sm:pb-16">
       {/* Hero Section */}
       <div className="relative h-[65vh] sm:h-[50vh] min-h-[450px] w-full rounded-b-[2rem] sm:rounded-b-[3rem] overflow-hidden shadow-2xl">
         <img 

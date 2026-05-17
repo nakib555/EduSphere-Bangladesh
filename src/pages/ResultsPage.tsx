@@ -41,7 +41,7 @@ export function ResultsPage() {
   };
 
   return (
-    <div className="flex-1 w-full bg-slate-50">
+    <div className="flex-1 w-full bg-slate-50 pb-12 sm:pb-16">
       {/* Header */}
       <div className="bg-primary-950 pb-12 pt-6 sm:pb-16 sm:pt-8 text-white relative overflow-hidden">
         {/* Background decorative elements */}
