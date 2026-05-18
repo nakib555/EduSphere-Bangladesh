@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useUniversities } from '../lib/useUniversities';
 import { Button } from '../components/ui/Button';
-import { GraduationCap, MapPin, Target, Award, ArrowLeft, Bookmark, Globe, Users, BookOpen, Search, Phone, Mail, ChevronRight, ChevronDown } from 'lucide-react';
+import { GraduationCap, MapPin, Target, Award, ArrowLeft, Bookmark, Globe, Users, BookOpen, Search, Phone, Mail, ChevronRight, ChevronDown, Check, Scale, X } from 'lucide-react';
+import { Virtuoso } from 'react-virtuoso';
 import { motion, AnimatePresence } from 'motion/react';
 
 export function UniversityDetailsPage() {
@@ -11,33 +12,57 @@ export function UniversityDetailsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('All');
   const [expandedProgramName, setExpandedProgramName] = useState<string | null>(null);
+  const [selectedProgramNames, setSelectedProgramNames] = useState<string[]>([]);
+  const [showCompareModal, setShowCompareModal] = useState(false);
+
+  const toggleCompare = (e: React.MouseEvent, programName: string) => {
+    e.stopPropagation();
+    setSelectedProgramNames(prev => {
+      if (prev.includes(programName)) return prev.filter(name => name !== programName);
+      if (prev.length >= 3) {
+        alert("You can compare up to 3 programs at a time.");
+        return prev;
+      }
+      return [...prev, programName];
+    });
+  };
 
   const uni = universities.find(u => u.id === id);
 
   const ALL_PROGRAMS = useMemo(() => {
     if (!uni) return [];
-    return [
-      { name: "Computer Science & Engineering", level: "Undergraduate", category: "Engineering", rank: "Top 10 Globally", multiplier: 1.1 },
+    const basePrograms = [
+      { name: "Computer Science", level: "Undergraduate", category: "Engineering", rank: "Top 10 Globally", multiplier: 1.1 },
       { name: "Artificial Intelligence", level: "Master's", category: "Engineering", rank: "Top 5 Globally", multiplier: 1.25 },
       { name: "Business Administration", level: "Undergraduate", category: "Business", rank: "Top 20 Globally", multiplier: 1.0 },
       { name: "MBA", level: "Master's", category: "Business", rank: "Top 15 Globally", multiplier: 1.3 },
       { name: "Biological Sciences", level: "Undergraduate", category: "Science", rank: "Top 50 Globally", multiplier: 0.95 },
-      { name: "Data Science", level: "Master's", category: "Science", rank: "Top 30 Globally", multiplier: 1.15 },
       { name: "Data Science & Analytics", level: "Graduate", category: "Science", rank: "Top 25 Globally", multiplier: 1.15 },
       { name: "Physics", level: "PhD", category: "Science", rank: "Top 40 Globally", multiplier: 0.8 },
       { name: "Economics", level: "Undergraduate", category: "Social Sciences", rank: "Top 25 Globally", multiplier: 0.85 },
-    ].map(p => {
-      const total = uni.tuitionBDT * p.multiplier;
-      return {
-        ...p,
+      { name: "Mechanical Engineering", level: "Undergraduate", category: "Engineering", rank: "Top 30 Globally", multiplier: 1.05 },
+      { name: "Psychology", level: "Undergraduate", category: "Social Sciences", rank: "Top 50 Globally", multiplier: 0.9 },
+    ];
+    
+    // Generate 1000 programs to demonstrate virtualization capability
+    const generated = [];
+    for (let i = 0; i < 1000; i++) {
+      const base = basePrograms[i % basePrograms.length];
+      const variant = Math.floor(i / basePrograms.length) + 1;
+      
+      const total = uni.tuitionBDT * base.multiplier * (1 + (variant * 0.01)); // Slight variation
+      generated.push({
+        ...base,
+        name: i < basePrograms.length ? base.name : `${base.name} (Variant ${variant})`,
         fees: {
           total: total,
           tuition: total * 0.75,
           lab: total * 0.15,
           admin: total * 0.10
         }
-      };
-    });
+      });
+    }
+    return generated;
   }, [uni]);
 
   if (loading) {
@@ -228,71 +253,95 @@ export function UniversityDetailsPage() {
 
               <div className="space-y-3">
                 {filteredPrograms.length > 0 ? (
-                  filteredPrograms.map((program, i) => {
-                    const isExpanded = expandedProgramName === program.name;
-                    return (
-                    <div key={i} className={`flex flex-col p-4 rounded-2xl border transition-all ${isExpanded ? 'border-primary-200 bg-primary-50/30 shadow-md' : 'border-slate-100 bg-white hover:border-primary-200 hover:shadow-md'}`}>
-                      <div 
-                        onClick={() => setExpandedProgramName(isExpanded ? null : program.name)}
-                        className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 group cursor-pointer"
-                      >
-                        <div>
-                          <h4 className="font-semibold text-slate-900 group-hover:text-primary-700 transition-colors">{program.name}</h4>
-                          <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                            <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">{program.level}</span>
-                            <span className="text-xs text-slate-500">{program.category}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
-                          <div className="text-xs font-medium text-primary-700 bg-primary-50 px-3 py-1.5 rounded-full border border-primary-100 whitespace-nowrap">
-                            {program.rank}
-                          </div>
-                          <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:bg-primary-100 transition-colors shrink-0">
-                            {isExpanded ? (
-                              <ChevronDown className="h-5 w-5 text-primary-600 transition-transform" />
-                            ) : (
-                              <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-primary-600 transition-transform" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <AnimatePresence>
-                        {isExpanded && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="pt-4 mt-4 border-t border-slate-100/60">
-                              <h5 className="text-sm font-semibold text-slate-900 mb-3">Yearly Fee Breakdown</h5>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                                <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                                  <span className="block text-xs font-medium text-slate-500 mb-1">Tuition Proper</span>
-                                  <span className="block text-sm font-semibold text-slate-900">{formatCurrency(program.fees.tuition)}</span>
+                  <div className="min-h-[500px]">
+                  <Virtuoso
+                    useWindowScroll
+                    data={filteredPrograms}
+                    itemContent={(i, program) => {
+                      const isExpanded = expandedProgramName === program.name;
+                      const isSelected = selectedProgramNames.includes(program.name);
+                      return (
+                        <div className="pb-3">
+                          <div className={`flex flex-col p-4 rounded-2xl border transition-all ${isExpanded ? 'border-primary-200 bg-primary-50/30' : isSelected ? 'border-emerald-300 bg-emerald-50/30 shadow-md' : 'border-slate-100 bg-white hover:border-primary-200 hover:shadow-md'}`}>
+                            <div 
+                              onClick={() => setExpandedProgramName(isExpanded ? null : program.name)}
+                              className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 group cursor-pointer"
+                            >
+                              <div className="flex gap-3 items-start sm:items-center">
+                                <div>
+                                  <div className="flex items-center flex-wrap gap-2 sm:gap-3">
+                                    <h4 className={`font-semibold transition-colors ${isSelected ? 'text-emerald-900' : 'text-slate-900 group-hover:text-primary-700'}`}>{program.name}</h4>
+                                    <button
+                                      onClick={(e) => toggleCompare(e, program.name)}
+                                      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border transition-colors ${
+                                        isSelected 
+                                          ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100' 
+                                          : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-slate-700'
+                                      }`}
+                                    >
+                                      {isSelected ? 'Added to Compare' : '+ Compare'}
+                                    </button>
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                                    <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">{program.level}</span>
+                                    <span className="text-xs text-slate-500">{program.category}</span>
+                                  </div>
                                 </div>
-                                <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                                  <span className="block text-xs font-medium text-slate-500 mb-1">Lab Fees</span>
-                                  <span className="block text-sm font-semibold text-slate-900">{formatCurrency(program.fees.lab)}</span>
+                              </div>
+                              <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+                                <div className="text-xs font-medium text-primary-700 bg-primary-50 px-3 py-1.5 rounded-full border border-primary-100 whitespace-nowrap">
+                                  {program.rank}
                                 </div>
-                                <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                                  <span className="block text-xs font-medium text-slate-500 mb-1">Admin Charges</span>
-                                  <span className="block text-sm font-semibold text-slate-900">{formatCurrency(program.fees.admin)}</span>
-                                </div>
-                                <div className="bg-primary-50 p-3 rounded-xl border border-primary-100 shadow-sm">
-                                  <span className="block text-xs font-medium text-primary-700 mb-1">Total Fee</span>
-                                  <span className="block text-sm font-bold text-primary-900">{formatCurrency(program.fees.total)}</span>
+                                <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:bg-primary-100 transition-colors shrink-0">
+                                  {isExpanded ? (
+                                    <ChevronDown className="h-5 w-5 text-primary-600 transition-transform" />
+                                  ) : (
+                                    <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-primary-600 transition-transform" />
+                                  )}
                                 </div>
                               </div>
                             </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  )})
-                ) : (
+                            
+                            <AnimatePresence>
+                              {isExpanded && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="pt-4 mt-4 border-t border-slate-100/60">
+                                    <h5 className="text-sm font-semibold text-slate-900 mb-3">Yearly Fee Breakdown</h5>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                      <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                        <span className="block text-xs font-medium text-slate-500 mb-1">Tuition Proper</span>
+                                        <span className="block text-sm font-semibold text-slate-900">{formatCurrency(program.fees.tuition)}</span>
+                                      </div>
+                                      <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                        <span className="block text-xs font-medium text-slate-500 mb-1">Lab Fees</span>
+                                        <span className="block text-sm font-semibold text-slate-900">{formatCurrency(program.fees.lab)}</span>
+                                      </div>
+                                      <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                        <span className="block text-xs font-medium text-slate-500 mb-1">Admin Charges</span>
+                                        <span className="block text-sm font-semibold text-slate-900">{formatCurrency(program.fees.admin)}</span>
+                                      </div>
+                                      <div className="bg-primary-50 p-3 rounded-xl border border-primary-100 shadow-sm">
+                                        <span className="block text-xs font-medium text-primary-700 mb-1">Total Fee</span>
+                                        <span className="block text-sm font-bold text-primary-900">{formatCurrency(program.fees.total)}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </div>
+                      )
+                    }}
+                  />
+                </div>
+              ) : (
                   <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                     <BookOpen className="h-8 w-8 text-slate-300 mx-auto mb-3" />
                     <p className="text-slate-500 font-medium">No programs found matching your criteria</p>
@@ -426,6 +475,152 @@ export function UniversityDetailsPage() {
 
         </div>
       </div>
+      {/* Floating Compare Bar */}
+      <AnimatePresence>
+        {selectedProgramNames.length > 0 && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-xl mx-auto"
+          >
+            <div className="bg-slate-900 text-white rounded-2xl p-4 shadow-2xl shadow-slate-900/20 border border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-10 bg-emerald-600/20 text-emerald-400 rounded-full flex items-center justify-center">
+                  <Scale className="h-5 w-5" />
+                </div>
+                 <div>
+                  <p className="font-semibold">{selectedProgramNames.length} {selectedProgramNames.length === 1 ? 'Program' : 'Programs'} Selected</p>
+                  <p className="text-sm text-slate-400">Select up to 3 to compare</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button 
+                  variant="ghost" 
+                  className="text-slate-300 hover:text-white"
+                  onClick={() => setSelectedProgramNames([])}
+                >
+                  Clear
+                </Button>
+                 <Button 
+                  disabled={selectedProgramNames.length < 2}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white border-none shadow-lg shadow-emerald-600/20"
+                  onClick={() => setShowCompareModal(true)}
+                >
+                  Compare
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Compare Modal */}
+      <AnimatePresence>
+        {showCompareModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCompareModal(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+               animate={{ opacity: 1, scale: 1, y: 0 }}
+               exit={{ opacity: 0, scale: 0.95, y: 20 }}
+               className="relative w-full max-w-5xl max-h-[90vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+            >
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
+                <div>
+                  <h2 className="font-heading text-2xl font-bold text-slate-900">Compare Programs</h2>
+                   <p className="text-slate-500">{uni.name}</p>
+                </div>
+                <button 
+                   onClick={() => setShowCompareModal(false)}
+                   className="h-10 w-10 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full flex items-center justify-center transition-colors outline-none focus:ring-2 focus:ring-primary-500/20"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <div className="overflow-auto p-6 flex-1 bg-slate-50/50">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-w-min">
+                  {selectedProgramNames.map(name => {
+                     const program = ALL_PROGRAMS.find(p => p.name === name)!;
+                     return (
+                        <div key={name} className="flex-1 w-full bg-white rounded-2xl border border-slate-200/80 shadow-sm flex flex-col">
+                          <div className="p-6 border-b border-slate-100">
+                             <div className="flex justify-between items-start mb-3">
+                               <span className="inline-flex items-center rounded-md bg-emerald-50 text-emerald-700 px-2.5 py-1 text-xs font-semibold border border-emerald-100">
+                                  {program.level}
+                               </span>
+                               <button onClick={(e) => toggleCompare(e, program.name)} className="text-slate-300 hover:text-red-500 transition-colors">
+                                  <X className="h-5 w-5" />
+                               </button>
+                             </div>
+                             <h3 className="font-heading text-xl font-bold text-slate-900 leading-tight mb-2">{program.name}</h3>
+                             <p className="text-sm font-medium text-slate-500">{program.category}</p>
+                          </div>
+                           
+                          <div className="p-6 space-y-5 flex-1">
+                              <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Total Yearly Fee</p>
+                                <p className="text-2xl font-bold text-primary-600">{formatCurrency(program.fees.total)}</p>
+                              </div>
+
+                              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Fee Breakdown</p>
+                                <div className="space-y-3">
+                                   <div className="flex justify-between items-center text-sm">
+                                     <span className="text-slate-500">Tuition Proper</span>
+                                     <span className="font-semibold text-slate-900">{formatCurrency(program.fees.tuition)}</span>
+                                   </div>
+                                    <div className="flex justify-between items-center text-sm">
+                                     <span className="text-slate-500">Lab Fees</span>
+                                     <span className="font-semibold text-slate-900">{formatCurrency(program.fees.lab)}</span>
+                                   </div>
+                                    <div className="flex justify-between items-center text-sm">
+                                     <span className="text-slate-500">Admin Charges</span>
+                                     <span className="font-semibold text-slate-900">{formatCurrency(program.fees.admin)}</span>
+                                   </div>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Global Ranking</p>
+                                <div className="inline-flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                                  <Award className="h-4 w-4 text-amber-500" />
+                                  <span className="text-sm font-semibold text-slate-700">{program.rank}</span>
+                                </div>
+                              </div>
+                          </div>
+                           
+                          <div className="p-4 border-t border-slate-100 mt-auto bg-slate-50/50 rounded-b-2xl">
+                             <Button className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-none h-11">
+                               Apply Now
+                             </Button>
+                          </div>
+                        </div>
+                     )
+                  })}
+                  {selectedProgramNames.length < 3 && (
+                    <div className="hidden lg:flex flex-1 w-full bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 items-center justify-center min-h-[400px]">
+                      <div className="text-center">
+                         <div className="mx-auto w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3 text-slate-400">
+                           <Scale className="h-6 w-6" />
+                         </div>
+                         <p className="text-sm font-medium text-slate-500">Add another program to compare</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

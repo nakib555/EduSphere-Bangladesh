@@ -32,6 +32,16 @@
   }
 }
 
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+}
+
 body {
   @apply bg-slate-50 text-slate-900 font-sans antialiased selection:bg-primary-200 selection:text-primary-900;
 }

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { DollarSign, Info, Banknote, ShieldAlert, CheckCircle2, TrendingUp, HelpCircle, Users, BookOpen } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import currencyFormatter from 'currency.js';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 export function ProofOfFundsPage() {
   const [country, setCountry] = useState('Canada');
@@ -202,13 +203,49 @@ export function ProofOfFundsPage() {
                 </div>
 
                 <div className="space-y-4 pt-6 border-t border-slate-700/50">
+                  <div className="h-48 w-full mt-4 -mb-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: 'Tuition', value: tuitionValue },
+                            { name: country === 'Germany' ? 'Blocked Account' : 'Living Exp', value: baseLiving },
+                            ...(dependents > 0 && country !== 'Germany' ? [{ name: 'Dependents', value: depLiving }] : []),
+                            { name: 'Safe Buffer', value: safeBufferForeign },
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                          stroke="none"
+                        >
+                          <Cell fill="#3b82f6" /> {/* Blue for Tuition */}
+                          <Cell fill="#8b5cf6" /> {/* Purple for Living */}
+                          {dependents > 0 && country !== 'Germany' && <Cell fill="#ec4899" />} {/* Pink for Dependents */}
+                          <Cell fill="#10b981" /> {/* Emerald for Buffer */}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value: number) => formatForeign(value)}
+                          contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '12px', color: '#f8fafc' }}
+                          itemStyle={{ color: '#f8fafc' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+
                   <div className="flex justify-between items-center text-slate-300 p-3 rounded-xl bg-slate-800/50">
-                    <span className="flex items-center"><BookOpen className="h-4 w-4 mr-2 text-slate-400" /> Tuition (1 Yr)</span>
+                    <span className="flex items-center">
+                      <span className="w-3 h-3 rounded-full bg-blue-500 mr-2 shrink-0"></span>
+                      <BookOpen className="h-4 w-4 mr-2 text-slate-400" /> Tuition (1 Yr)
+                    </span>
                     <span className="font-bold text-white">{tuition === '' ? '---' : formatForeign(tuitionValue)}</span>
                   </div>
                   
                   <div className="flex justify-between items-center text-slate-300 p-3 rounded-xl bg-slate-800/50">
                     <span className="flex items-center">
+                      <span className="w-3 h-3 rounded-full bg-purple-500 mr-2 shrink-0"></span>
                       <Banknote className="h-4 w-4 mr-2 text-slate-400" /> 
                       {country === 'Germany' ? 'Blocked Account' : 'Living Expenses'}
                     </span>
@@ -217,13 +254,19 @@ export function ProofOfFundsPage() {
 
                   {dependents > 0 && country !== 'Germany' && (
                     <div className="flex justify-between items-center text-slate-300 p-3 rounded-xl bg-slate-800/50">
-                      <span className="flex items-center"><Users className="h-4 w-4 mr-2 text-slate-400" /> Dependents Cost</span>
+                      <span className="flex items-center">
+                        <span className="w-3 h-3 rounded-full bg-pink-500 mr-2 shrink-0"></span>
+                        <Users className="h-4 w-4 mr-2 text-slate-400" /> Dependents Cost
+                      </span>
                       <span className="font-bold text-white">{formatForeign(depLiving)}</span>
                     </div>
                   )}
 
                   <div className="flex justify-between items-center text-emerald-300 p-3 rounded-xl bg-emerald-900/20 border border-emerald-800/30">
-                    <span className="flex items-center"><ShieldAlert className="h-4 w-4 mr-2 text-emerald-400" /> Safe Buffer (10%)</span>
+                    <span className="flex items-center">
+                      <span className="w-3 h-3 rounded-full bg-emerald-500 mr-2 shrink-0"></span>
+                      <ShieldAlert className="h-4 w-4 mr-2 text-emerald-400" /> Safe Buffer (10%)
+                    </span>
                     <span className="font-bold">{formatForeign(safeBufferForeign)}</span>
                   </div>
                 </div>
