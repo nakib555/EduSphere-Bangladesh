@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, Navigate, Link } from 'react-router-dom';
-import { UserProfile, UNIVERSITIES, categorizeMatch, University } from '../lib/data';
+import { UserProfile, categorizeMatch, University } from '../lib/data';
+import { useUniversities } from '../lib/useUniversities';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { GraduationCap, MapPin, DollarSign, Target, Award, ArrowLeft, Bookmark } from 'lucide-react';
@@ -10,13 +11,14 @@ import { cn } from '../lib/utils';
 export function ResultsPage() {
   const location = useLocation();
   const profile = location.state?.profile as UserProfile | undefined;
+  const { universities, loading } = useUniversities();
 
   if (!profile) {
     return <Navigate to="/build-profile" />;
   }
 
   // Calculate matches
-  const matches = UNIVERSITIES.map(uni => ({
+  const matches = universities.map(uni => ({
     university: uni,
     category: categorizeMatch(profile, uni)
   })).filter(match => {

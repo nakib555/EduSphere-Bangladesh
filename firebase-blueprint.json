@@ -1,0 +1,36 @@
+{
+  "entities": {
+    "University": {
+      "title": "University",
+      "description": "Information about a university.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "location": { "type": "string" },
+        "country": { "type": "string" },
+        "type": { "type": "string", "enum": ["Public", "Private"] },
+        "tier": { "type": "string", "enum": ["Top Tier", "Mid Tier", "Standard"] },
+        "tuitionBDT": { "type": "number" },
+        "acceptanceRate": { "type": "number" },
+        "requirements": {
+          "type": "object",
+          "properties": {
+            "minGPA": { "type": "number" },
+            "minIELTS": { "type": "number" },
+            "acceptsMOI": { "type": "boolean" },
+            "satRecommended": { "type": "boolean" }
+          }
+        },
+        "scholarshipsAvailable": { "type": "boolean" },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["name", "location", "country", "type", "tier", "tuitionBDT", "acceptanceRate", "scholarshipsAvailable", "imageUrl"]
+    }
+  },
+  "firestore": {
+    "universities/{universityId}": {
+      "schema": { "$ref": "#/entities/University" },
+      "description": "Collection of universities and their admission details."
+    }
+  }
+}

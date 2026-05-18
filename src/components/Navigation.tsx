@@ -61,14 +61,16 @@ export function Navigation() {
 
 function MobileNavItem({ to, icon, label, active }: { to: string, icon: React.ReactNode, label: string, active: boolean }) {
   return (
-    <Link to={to} className="flex flex-col items-center justify-center w-full py-1 gap-1">
+    <Link to={to} className="flex flex-col items-center justify-center w-full h-full pt-1">
       <div className={cn("flex flex-col items-center transition-all duration-200", active ? "text-primary-600" : "text-slate-500")}>
         {icon}
-        <span className="text-[10px] font-medium leading-tight mt-1">{label}</span>
+        <span className="text-[10px] font-medium leading-tight mt-0.5">{label}</span>
       </div>
-      {active && (
-        <motion.div layoutId="mobile-nav-indicator" className="w-1 h-1 rounded-full bg-primary-600 mt-0.5" />
-      )}
+      <div className="h-1 mt-1">
+        {active && (
+          <motion.div layoutId="mobile-nav-indicator" className="w-1 h-1 rounded-full bg-primary-600" />
+        )}
+      </div>
     </Link>
   );
 }

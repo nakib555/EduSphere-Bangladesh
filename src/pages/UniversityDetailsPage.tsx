@@ -1,16 +1,52 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { UNIVERSITIES } from '../lib/data';
+import { useUniversities } from '../lib/useUniversities';
 import { Button } from '../components/ui/Button';
 import { GraduationCap, MapPin, Target, Award, ArrowLeft, Bookmark, Globe, Users, BookOpen, Search, Phone, Mail, ChevronRight, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export function UniversityDetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const uni = UNIVERSITIES.find(u => u.id === id);
+  const { universities, loading } = useUniversities();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('All');
   const [expandedProgramName, setExpandedProgramName] = useState<string | null>(null);
+
+  const uni = universities.find(u => u.id === id);
+
+  const ALL_PROGRAMS = useMemo(() => {
+    if (!uni) return [];
+    return [
+      { name: "Computer Science & Engineering", level: "Undergraduate", category: "Engineering", rank: "Top 10 Globally", multiplier: 1.1 },
+      { name: "Artificial Intelligence", level: "Master's", category: "Engineering", rank: "Top 5 Globally", multiplier: 1.25 },
+      { name: "Business Administration", level: "Undergraduate", category: "Business", rank: "Top 20 Globally", multiplier: 1.0 },
+      { name: "MBA", level: "Master's", category: "Business", rank: "Top 15 Globally", multiplier: 1.3 },
+      { name: "Biological Sciences", level: "Undergraduate", category: "Science", rank: "Top 50 Globally", multiplier: 0.95 },
+      { name: "Data Science", level: "Master's", category: "Science", rank: "Top 30 Globally", multiplier: 1.15 },
+      { name: "Data Science & Analytics", level: "Graduate", category: "Science", rank: "Top 25 Globally", multiplier: 1.15 },
+      { name: "Physics", level: "PhD", category: "Science", rank: "Top 40 Globally", multiplier: 0.8 },
+      { name: "Economics", level: "Undergraduate", category: "Social Sciences", rank: "Top 25 Globally", multiplier: 0.85 },
+    ].map(p => {
+      const total = uni.tuitionBDT * p.multiplier;
+      return {
+        ...p,
+        fees: {
+          total: total,
+          tuition: total * 0.75,
+          lab: total * 0.15,
+          admin: total * 0.10
+        }
+      };
+    });
+  }, [uni]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <p className="text-slate-500 font-medium">Loading university details...</p>
+      </div>
+    );
+  }
 
   if (!uni) {
     return (
@@ -28,29 +64,6 @@ export function UniversityDetailsPage() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-BD', { style: 'currency', currency: 'BDT', maximumFractionDigits: 0 }).format(amount);
   };
-
-  const ALL_PROGRAMS = [
-    { name: "Computer Science & Engineering", level: "Undergraduate", category: "Engineering", rank: "Top 10 Globally", multiplier: 1.1 },
-    { name: "Artificial Intelligence", level: "Master's", category: "Engineering", rank: "Top 5 Globally", multiplier: 1.25 },
-    { name: "Business Administration", level: "Undergraduate", category: "Business", rank: "Top 20 Globally", multiplier: 1.0 },
-    { name: "MBA", level: "Master's", category: "Business", rank: "Top 15 Globally", multiplier: 1.3 },
-    { name: "Biological Sciences", level: "Undergraduate", category: "Science", rank: "Top 50 Globally", multiplier: 0.95 },
-    { name: "Data Science", level: "Master's", category: "Science", rank: "Top 30 Globally", multiplier: 1.15 },
-    { name: "Data Science & Analytics", level: "Graduate", category: "Science", rank: "Top 25 Globally", multiplier: 1.15 },
-    { name: "Physics", level: "PhD", category: "Science", rank: "Top 40 Globally", multiplier: 0.8 },
-    { name: "Economics", level: "Undergraduate", category: "Social Sciences", rank: "Top 25 Globally", multiplier: 0.85 },
-  ].map(p => {
-    const total = uni.tuitionBDT * p.multiplier;
-    return {
-      ...p,
-      fees: {
-        total: total,
-        tuition: total * 0.75,
-        lab: total * 0.15,
-        admin: total * 0.10
-      }
-    };
-  });
 
   const levels = ['All', 'Undergraduate', 'Graduate', "Master's", 'PhD'];
 

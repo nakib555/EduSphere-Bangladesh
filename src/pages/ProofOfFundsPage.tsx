@@ -1,22 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { motion, AnimatePresence } from 'motion/react';
-import { DollarSign, Info, Banknote, ShieldAlert, CheckCircle2, TrendingUp, HelpCircle } from 'lucide-react';
+import { DollarSign, Info, Banknote, ShieldAlert, CheckCircle2, TrendingUp, HelpCircle, Users, BookOpen } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import currencyFormatter from 'currency.js';
 
 export function ProofOfFundsPage() {
   const [country, setCountry] = useState('Canada');
   const [tuition, setTuition] = useState<number | ''>('');
   const [dependents, setDependents] = useState(0);
 
-  const rates: Record<string, { currency: string, rateToBdt: number, livingExp: number, dependentCost: number, name: string, flag: string }> = {
+  const [rates, setRates] = useState<Record<string, { currency: string, rateToBdt: number, livingExp: number, dependentCost: number, name: string, flag: string }>>({
     'Canada': { name: 'Canada', flag: '🇨🇦', currency: 'CAD', rateToBdt: 86, livingExp: 20635, dependentCost: 5055 },
     'USA': { name: 'United States', flag: '🇺🇸', currency: 'USD', rateToBdt: 110, livingExp: 18000, dependentCost: 4000 },
     'UK': { name: 'United Kingdom', flag: '🇬🇧', currency: 'GBP', rateToBdt: 142, livingExp: 12006, dependentCost: 6120 },
     'Australia': { name: 'Australia', flag: '🇦🇺', currency: 'AUD', rateToBdt: 74, livingExp: 24505, dependentCost: 7362 },
     'Germany': { name: 'Germany', flag: '🇩🇪', currency: 'EUR', rateToBdt: 120, livingExp: 11208, dependentCost: 0 },
-  };
+  });
+
+  useEffect(() => {
+    // Fetch live currency rates using ExchangeRate-API (Free tier, no key required)
+    fetch('https://open.er-api.com/v6/latest/BDT')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.rates) {
+          setRates(prev => ({
+            ...prev,
+            'Canada': { ...prev['Canada'], rateToBdt: Math.round(1 / data.rates.CAD) },
+            'USA': { ...prev['USA'], rateToBdt: Math.round(1 / data.rates.USD) },
+            'UK': { ...prev['UK'], rateToBdt: Math.round(1 / data.rates.GBP) },
+            'Australia': { ...prev['Australia'], rateToBdt: Math.round(1 / data.rates.AUD) },
+            'Germany': { ...prev['Germany'], rateToBdt: Math.round(1 / data.rates.EUR) },
+          }));
+        }
+      })
+      .catch(err => console.error("Could not fetch latest rates:", err));
+  }, []);
 
   const selectedRate = rates[country];
   const tuitionValue = typeof tuition === 'number' ? tuition : 0;
@@ -32,11 +52,12 @@ export function ProofOfFundsPage() {
   const totalBdt = finalForeign * selectedRate.rateToBdt;
 
   const formatBdt = (amount: number) => {
-    return new Intl.NumberFormat('en-BD', { style: 'currency', currency: 'BDT', maximumFractionDigits: 0 }).format(amount);
+    return currencyFormatter(amount, { symbol: '৳', precision: 0, separator: ',' }).format();
   };
 
   const formatForeign = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: selectedRate.currency, maximumFractionDigits: 0 }).format(amount);
+    const symbolMap: Record<string, string> = { 'USD': '$', 'CAD': 'C$', 'GBP': '£', 'AUD': 'A$', 'EUR': '€' };
+    return currencyFormatter(amount, { symbol: symbolMap[selectedRate.currency] || '$', precision: 0, separator: ',' }).format();
   };
 
   return (
