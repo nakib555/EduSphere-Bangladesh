@@ -38,19 +38,44 @@ export function categorizeMatch(userProfile: UserProfile, university: University
 
   let score = 0;
   
-  // Basic mock logic for matches
-  if (!userProfile.hscGpa) return 'Target';
-
-  const gpaDiff = userProfile.hscGpa - (university.requirements.minGPA || 3.0);
-  if (gpaDiff >= 0.5) score += 2;
-  else if (gpaDiff >= 0) score += 1;
-  else score -= 2;
-
-  if (university.tuitionBDT > userProfile.budgetBDT && !userProfile.needsFunding && userProfile.budgetBDT > 0) {
-    score -= 3; // Way too expensive without funding requirement
+  // High weight: Location match
+  if (userProfile.studyDestination?.includes(university.country) || userProfile.studyDestination?.includes('Any')) {
+    score += 2;
+  } else if (userProfile.studyDestination && userProfile.studyDestination.length > 0 && !userProfile.studyDestination.includes(university.country)) {
+    score -= 3;
   }
 
-  if (score >= 2) return 'Safe';
+  // Budget vs Tuition
+  const isBudgetFriendly = university.tuitionBDT <= userProfile.budgetBDT + 50000; // Small buffer
+  if (isBudgetFriendly) {
+    score += 2;
+  } else if (userProfile.needsFunding && university.scholarshipsAvailable) {
+    score += 1;
+  } else {
+    score -= 3; // Way too expensive
+  }
+
+  // GPA matching (if GPA exists for HSC)
+  if (userProfile.hscGpa && university.requirements?.minGPA) {
+    const gpaDiff = userProfile.hscGpa - university.requirements.minGPA;
+    if (gpaDiff >= 0.5) score += 3;
+    else if (gpaDiff >= 0) score += 1;
+    else score -= 4; // GPA below requirement
+  }
+
+  // English Proficiency matching
+  if (userProfile.englishTest === 'IELTS' && userProfile.englishScore && university.requirements?.minIELTS) {
+    const ieltsDiff = userProfile.englishScore - university.requirements.minIELTS;
+    if (ieltsDiff >= 0.5) score += 1;
+    else if (ieltsDiff < 0) score -= 2; // Failed minimum English requirement
+  }
+
+  // Competitive Tier Weighting
+  if (university.tier === 'Top Tier') {
+    score -= 2; // Generally harder to get into
+  }
+
+  if (score >= 4) return 'Safe';
   if (score >= 0) return 'Target';
   return 'Reach';
 }

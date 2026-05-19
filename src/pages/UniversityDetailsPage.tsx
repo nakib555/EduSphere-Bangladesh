@@ -191,7 +191,7 @@ export function UniversityDetailsPage() {
       </div>
 
       {/* Main Content Areas */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-32 md:pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Main Info Column */}
@@ -506,29 +506,29 @@ export function UniversityDetailsPage() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-[80px] md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[95%] sm:w-auto max-w-xl mx-auto"
+            className="fixed bottom-[100px] md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[96%] sm:w-auto max-w-xl mx-auto"
           >
-            <div className="bg-slate-900 text-white rounded-2xl p-3 sm:p-4 shadow-2xl shadow-slate-900/20 border border-slate-800 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 sm:gap-4">
-                <div className="hidden sm:flex h-10 w-10 bg-emerald-600/20 text-emerald-400 rounded-full items-center justify-center">
+            <div className="bg-slate-900 text-white rounded-2xl p-3 sm:p-4 shadow-2xl shadow-slate-900/20 border border-slate-800 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 sm:gap-4 flex-1">
+                <div className="hidden sm:flex h-10 w-10 bg-emerald-600/20 text-emerald-400 rounded-full items-center justify-center shrink-0">
                   <Scale className="h-5 w-5" />
                 </div>
-                 <div>
-                  <p className="font-semibold text-sm sm:text-base">{selectedProgramNames.length} {selectedProgramNames.length === 1 ? 'Program' : 'Programs'} Selected</p>
-                  <p className="text-xs sm:text-sm text-slate-400 hidden sm:block">Select up to 3 to compare</p>
+                 <div className="pl-1 sm:pl-0">
+                  <p className="font-semibold text-sm sm:text-base leading-tight">{selectedProgramNames.length} {selectedProgramNames.length === 1 ? 'Program' : 'Programs'} Selected</p>
+                  <p className="text-[11px] sm:text-sm text-slate-400">Select up to 3</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                 <Button 
                   variant="ghost" 
-                  className="text-slate-300 hover:text-white px-3 sm:px-4 text-sm"
+                  className="text-slate-300 hover:text-white px-2 sm:px-4 text-xs sm:text-sm h-9 sm:h-10"
                   onClick={() => setSelectedProgramNames([])}
                 >
                   Clear
                 </Button>
                  <Button 
                   disabled={selectedProgramNames.length < 2}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white border-none shadow-lg shadow-emerald-600/20 px-3 sm:px-4 text-sm sm:text-base h-9 sm:h-10"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white border-none shadow-lg shadow-emerald-600/20 px-3 sm:px-4 text-xs sm:text-base h-9 sm:h-10"
                   onClick={() => setShowCompareModal(true)}
                 >
                   Compare

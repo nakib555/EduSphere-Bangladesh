@@ -14,8 +14,7 @@ export function useUniversities() {
         const path = 'universities';
         const snapshot = await getDocs(collection(db, path));
         if (snapshot.empty) {
-          // Fallback to mock data if empty
-          setUniversities(MOCK_UNIVERSITIES);
+          setUniversities([]);
         } else {
           const fetchedUnis = snapshot.docs.map(doc => {
             const data = doc.data();
@@ -45,8 +44,7 @@ export function useUniversities() {
         }
       } catch (error) {
         console.error(error);
-        // Fallback to mock on error just so the UI doesn't break entirely if unhandled
-        setUniversities(MOCK_UNIVERSITIES);
+        setUniversities([]);
       } finally {
         setLoading(false);
       }

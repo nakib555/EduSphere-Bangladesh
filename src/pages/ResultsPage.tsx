@@ -27,12 +27,12 @@ export function ResultsPage() {
       category: categorizeMatch(profile, uni)
     })).filter(match => {
       // Basic filtering based on destination
-      if (profile.studyDestination?.length > 0 && !profile.studyDestination.includes('Bangladesh') && match.university.country === 'Bangladesh') {
-         return profile.studyDestination.includes('Bangladesh');
+      if (profile.studyDestination && profile.studyDestination.length > 0 && !profile.studyDestination.includes('Any')) {
+         if (!profile.studyDestination.includes(match.university.country)) {
+            return false;
+         }
       }
-      if (profile.studyDestination?.length > 0 && profile.studyDestination.includes('Bangladesh') && profile.studyDestination.length === 1 && match.university.country !== 'Bangladesh') {
-         return false;
-      }
+      
       if (onlyScholarships && !match.university.scholarshipsAvailable) {
          return false;
       }
@@ -82,7 +82,7 @@ export function ResultsPage() {
   };
 
   return (
-    <div className="flex-1 w-full bg-slate-50 pb-12 sm:pb-16">
+    <div className="flex-1 w-full bg-slate-50 pb-24 sm:pb-16">
       {/* Header */}
       <div className="bg-primary-950 pb-12 pt-6 sm:pb-16 sm:pt-8 text-white relative overflow-hidden">
         {/* Background decorative elements */}
