@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "phat-feather-ds7sz"
+  },
+  "targets": {
+    "phat-feather-ds7sz": {
+      "firestore": {
+        "main": [
+          "ai-studio-118cfcce-f824-48ff-9a4a-b7e3ba86b11f"
+        ]
+      }
+    }
   }
 }

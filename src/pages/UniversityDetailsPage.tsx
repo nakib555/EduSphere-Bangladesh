@@ -1,14 +1,16 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useUniversities } from '../lib/useUniversities';
+import { useUniversities, usePrograms } from '../lib/useUniversities';
 import { Button } from '../components/ui/Button';
 import { GraduationCap, MapPin, Target, Award, ArrowLeft, Bookmark, Globe, Users, BookOpen, Search, Phone, Mail, ChevronRight, ChevronDown, Check, Scale, X } from 'lucide-react';
 import { Virtuoso } from 'react-virtuoso';
 import { motion, AnimatePresence } from 'motion/react';
+import { BD_PROGRAMS } from '../lib/bdData';
 
 export function UniversityDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const { universities, loading } = useUniversities();
+  const { programs: dbPrograms } = usePrograms();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('All');
   const [expandedProgramName, setExpandedProgramName] = useState<string | null>(null);
@@ -31,6 +33,24 @@ export function UniversityDetailsPage() {
 
   const ALL_PROGRAMS = useMemo(() => {
     if (!uni) return [];
+
+    let sourcePrograms = dbPrograms.length > 0 ? dbPrograms : BD_PROGRAMS;
+    
+    const realPrograms = sourcePrograms.filter(p => p.universityId === uni.id).map(p => ({
+      name: p.courseName,
+      level: p.degreeLevel,
+      category: p.fieldOfStudy,
+      rank: p.tags && p.tags.length > 0 ? p.tags[0] : 'Top 100 Globally',
+      fees: {
+        total: p.tuitionFees?.domestic?.amount * 4 || 0,
+        tuition: p.tuitionFees?.domestic?.amount * 0.75 || 0,
+        lab: p.tuitionFees?.domestic?.amount * 0.15 || 0,
+        admin: p.tuitionFees?.domestic?.amount * 0.10 || 0
+      }
+    }));
+
+    if (realPrograms.length > 0) return realPrograms;
+
     const basePrograms = [
       { name: "Computer Science", level: "Undergraduate", category: "Engineering", rank: "Top 10 Globally", multiplier: 1.1 },
       { name: "Artificial Intelligence", level: "Master's", category: "Engineering", rank: "Top 5 Globally", multiplier: 1.25 },
@@ -262,41 +282,45 @@ export function UniversityDetailsPage() {
                       const isSelected = selectedProgramNames.includes(program.name);
                       return (
                         <div className="pb-3">
-                          <div className={`flex flex-col p-4 rounded-2xl border transition-all ${isExpanded ? 'border-primary-200 bg-primary-50/30' : isSelected ? 'border-emerald-300 bg-emerald-50/30 shadow-md' : 'border-slate-100 bg-white hover:border-primary-200 hover:shadow-md'}`}>
+                          <div className={`flex flex-col p-4 sm:p-5 rounded-2xl border transition-all ${isExpanded ? 'border-primary-200 bg-primary-50/30' : isSelected ? 'border-emerald-300 bg-emerald-50/30 shadow-md' : 'border-slate-100 bg-white hover:border-primary-200 hover:shadow-md'}`}>
                             <div 
                               onClick={() => setExpandedProgramName(isExpanded ? null : program.name)}
-                              className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 group cursor-pointer"
+                              className="flex flex-col cursor-pointer group"
                             >
-                              <div className="flex gap-3 items-start sm:items-center">
-                                <div>
-                                  <div className="flex items-center flex-wrap gap-2 sm:gap-3">
-                                    <h4 className={`font-semibold transition-colors ${isSelected ? 'text-emerald-900' : 'text-slate-900 group-hover:text-primary-700'}`}>{program.name}</h4>
-                                    <button
-                                      onClick={(e) => toggleCompare(e, program.name)}
-                                      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md border transition-colors ${
-                                        isSelected 
-                                          ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100' 
-                                          : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-slate-700'
-                                      }`}
-                                    >
-                                      {isSelected ? 'Added to Compare' : '+ Compare'}
-                                    </button>
-                                  </div>
-                                  <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                                    <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">{program.level}</span>
-                                    <span className="text-xs text-slate-500">{program.category}</span>
-                                  </div>
-                                </div>
+                              <div className="flex justify-between items-start gap-4 mb-3">
+                                <h4 className={`font-semibold text-lg leading-tight transition-colors ${isSelected ? 'text-emerald-900' : 'text-slate-900 group-hover:text-primary-700'}`}>
+                                  {program.name}
+                                </h4>
                               </div>
-                              <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
-                                <div className="text-xs font-medium text-primary-700 bg-primary-50 px-3 py-1.5 rounded-full border border-primary-100 whitespace-nowrap">
+                              
+                              <div className="flex flex-wrap items-center gap-2 mb-4">
+                                <button
+                                  onClick={(e) => toggleCompare(e, program.name)}
+                                  className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-md border transition-colors ${
+                                    isSelected 
+                                      ? 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200' 
+                                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-800'
+                                  }`}
+                                >
+                                  {isSelected ? 'Added to Compare' : '+ Compare'}
+                                </button>
+                                <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1.5 rounded-md border border-slate-200/50">
+                                  {program.level}
+                                </span>
+                                <span className="text-xs font-medium text-slate-500">
+                                  {program.category}
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center justify-between pt-3 border-t border-slate-100/80">
+                                <div className="text-xs font-medium text-primary-700 bg-primary-50 px-3 py-1.5 rounded-full border border-primary-100/50 whitespace-nowrap">
                                   {program.rank}
                                 </div>
-                                <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:bg-primary-100 transition-colors shrink-0">
+                                <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-200/60 group-hover:bg-primary-100 transition-colors shrink-0">
                                   {isExpanded ? (
-                                    <ChevronDown className="h-5 w-5 text-primary-600 transition-transform" />
+                                    <ChevronDown className="h-4 w-4 text-primary-600 transition-transform" />
                                   ) : (
-                                    <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-primary-600 transition-transform" />
+                                    <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-primary-600 transition-transform" />
                                   )}
                                 </div>
                               </div>
@@ -482,29 +506,29 @@ export function UniversityDetailsPage() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-xl mx-auto"
+            className="fixed bottom-[80px] md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[95%] sm:w-auto max-w-xl mx-auto"
           >
-            <div className="bg-slate-900 text-white rounded-2xl p-4 shadow-2xl shadow-slate-900/20 border border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 bg-emerald-600/20 text-emerald-400 rounded-full flex items-center justify-center">
+            <div className="bg-slate-900 text-white rounded-2xl p-3 sm:p-4 shadow-2xl shadow-slate-900/20 border border-slate-800 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="hidden sm:flex h-10 w-10 bg-emerald-600/20 text-emerald-400 rounded-full items-center justify-center">
                   <Scale className="h-5 w-5" />
                 </div>
                  <div>
-                  <p className="font-semibold">{selectedProgramNames.length} {selectedProgramNames.length === 1 ? 'Program' : 'Programs'} Selected</p>
-                  <p className="text-sm text-slate-400">Select up to 3 to compare</p>
+                  <p className="font-semibold text-sm sm:text-base">{selectedProgramNames.length} {selectedProgramNames.length === 1 ? 'Program' : 'Programs'} Selected</p>
+                  <p className="text-xs sm:text-sm text-slate-400 hidden sm:block">Select up to 3 to compare</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                 <Button 
                   variant="ghost" 
-                  className="text-slate-300 hover:text-white"
+                  className="text-slate-300 hover:text-white px-3 sm:px-4 text-sm"
                   onClick={() => setSelectedProgramNames([])}
                 >
                   Clear
                 </Button>
                  <Button 
                   disabled={selectedProgramNames.length < 2}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white border-none shadow-lg shadow-emerald-600/20"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white border-none shadow-lg shadow-emerald-600/20 px-3 sm:px-4 text-sm sm:text-base h-9 sm:h-10"
                   onClick={() => setShowCompareModal(true)}
                 >
                   Compare
@@ -518,7 +542,7 @@ export function UniversityDetailsPage() {
       {/* Compare Modal */}
       <AnimatePresence>
         {showCompareModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -530,28 +554,28 @@ export function UniversityDetailsPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
                animate={{ opacity: 1, scale: 1, y: 0 }}
                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-               className="relative w-full max-w-5xl max-h-[90vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+               className="relative w-full max-w-5xl max-h-[90vh] bg-white rounded-[2rem] shadow-2xl flex flex-col overflow-hidden"
             >
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
+              <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
                 <div>
-                  <h2 className="font-heading text-2xl font-bold text-slate-900">Compare Programs</h2>
-                   <p className="text-slate-500">{uni.name}</p>
+                  <h2 className="font-heading text-xl sm:text-2xl font-bold text-slate-900">Compare Programs</h2>
+                   <p className="text-sm sm:text-base text-slate-500">{uni.name}</p>
                 </div>
                 <button 
                    onClick={() => setShowCompareModal(false)}
-                   className="h-10 w-10 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full flex items-center justify-center transition-colors outline-none focus:ring-2 focus:ring-primary-500/20"
+                   className="h-10 w-10 sm:h-12 sm:w-12 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full flex items-center justify-center transition-colors outline-none focus:ring-2 focus:ring-primary-500/20"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
               
-              <div className="overflow-auto p-6 flex-1 bg-slate-50/50">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-w-min">
+              <div className="overflow-auto p-4 sm:p-6 flex-1 bg-slate-50/50">
+                <div className="flex flex-row overflow-x-auto snap-x snap-mandatory gap-4 sm:gap-6 pb-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:overflow-visible">
                   {selectedProgramNames.map(name => {
                      const program = ALL_PROGRAMS.find(p => p.name === name)!;
                      return (
-                        <div key={name} className="flex-1 w-full bg-white rounded-2xl border border-slate-200/80 shadow-sm flex flex-col">
-                          <div className="p-6 border-b border-slate-100">
+                        <div key={name} className="flex-1 shrink-0 w-[85vw] sm:w-[320px] md:w-auto snap-center bg-white rounded-2xl border border-slate-200/80 shadow-sm flex flex-col">
+                          <div className="p-5 sm:p-6 border-b border-slate-100">
                              <div className="flex justify-between items-start mb-3">
                                <span className="inline-flex items-center rounded-md bg-emerald-50 text-emerald-700 px-2.5 py-1 text-xs font-semibold border border-emerald-100">
                                   {program.level}
@@ -560,21 +584,21 @@ export function UniversityDetailsPage() {
                                   <X className="h-5 w-5" />
                                </button>
                              </div>
-                             <h3 className="font-heading text-xl font-bold text-slate-900 leading-tight mb-2">{program.name}</h3>
+                             <h3 className="font-heading text-lg sm:text-xl font-bold text-slate-900 leading-tight mb-2">{program.name}</h3>
                              <p className="text-sm font-medium text-slate-500">{program.category}</p>
                           </div>
                            
-                          <div className="p-6 space-y-5 flex-1">
+                          <div className="p-5 sm:p-6 space-y-5 flex-1">
                               <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Total Yearly Fee</p>
-                                <p className="text-2xl font-bold text-primary-600">{formatCurrency(program.fees.total)}</p>
+                                <p className="text-xl sm:text-2xl font-bold text-primary-600">{formatCurrency(program.fees.total)}</p>
                               </div>
 
                               <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Fee Breakdown</p>
                                 <div className="space-y-3">
                                    <div className="flex justify-between items-center text-sm">
-                                     <span className="text-slate-500">Tuition Proper</span>
+                                     <span className="text-slate-500">Tuition</span>
                                      <span className="font-semibold text-slate-900">{formatCurrency(program.fees.tuition)}</span>
                                    </div>
                                     <div className="flex justify-between items-center text-sm">
@@ -582,7 +606,7 @@ export function UniversityDetailsPage() {
                                      <span className="font-semibold text-slate-900">{formatCurrency(program.fees.lab)}</span>
                                    </div>
                                     <div className="flex justify-between items-center text-sm">
-                                     <span className="text-slate-500">Admin Charges</span>
+                                     <span className="text-slate-500">Admin</span>
                                      <span className="font-semibold text-slate-900">{formatCurrency(program.fees.admin)}</span>
                                    </div>
                                 </div>
@@ -606,8 +630,8 @@ export function UniversityDetailsPage() {
                      )
                   })}
                   {selectedProgramNames.length < 3 && (
-                    <div className="hidden lg:flex flex-1 w-full bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 items-center justify-center min-h-[400px]">
-                      <div className="text-center">
+                    <div className="hidden md:flex flex-1 w-full bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 items-center justify-center min-h-[400px]">
+                      <div className="text-center p-6">
                          <div className="mx-auto w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3 text-slate-400">
                            <Scale className="h-6 w-6" />
                          </div>

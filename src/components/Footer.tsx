@@ -1,7 +1,42 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { GraduationCap, Facebook, Twitter, Instagram, Linkedin, Heart } from 'lucide-react';
+import { GraduationCap, Facebook, Twitter, Instagram, Linkedin, Heart, Database } from 'lucide-react';
+import { BD_PROGRAMS, BD_UNIVERSITIES } from '../lib/bdData';
+import { doc, writeBatch } from 'firebase/firestore';
+import { db, auth } from '../lib/firebase';
+import { Button } from './ui/Button';
 
 export function Footer() {
+  const [isSeeding, setIsSeeding] = useState(false);
+
+  const seedDatabase = async () => {
+    if (!auth.currentUser) {
+      alert("You must be logged in as admin to seed data");
+      return;
+    }
+    
+    setIsSeeding(true);
+    try {
+      const batch = writeBatch(db);
+      
+      BD_UNIVERSITIES.forEach(uni => {
+        batch.set(doc(db, 'universities', uni.id), uni);
+      });
+      
+      BD_PROGRAMS.forEach(prog => {
+        batch.set(doc(db, 'programs', prog.id), prog);
+      });
+      
+      await batch.commit();
+      alert("Successfully seeded Bangladesh universities and programs to database!");
+    } catch (error: any) {
+      console.error(error);
+      alert("Failed to seed: " + error.message);
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   return (
     <footer className="bg-slate-900 pt-16 pb-24 sm:pb-8 text-slate-300">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -29,6 +64,20 @@ export function Footer() {
               <a href="#" className="text-slate-400 hover:text-white transition-colors">
                 <Linkedin className="h-5 w-5" />
               </a>
+            </div>
+            
+            {/* Admin Seed Button */}
+            <div className="pt-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={seedDatabase}
+                disabled={isSeeding}
+                className="bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white text-xs gap-2"
+              >
+                <Database className="h-3 w-3" />
+                {isSeeding ? 'Seeding...' : 'Seed Database'}
+              </Button>
             </div>
           </div>
           

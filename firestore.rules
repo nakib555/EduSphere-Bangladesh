@@ -16,41 +16,23 @@ service cloud.firestore {
     function existing() { return resource.data; }
     function isSignedIn() { return request.auth != null && request.auth.token.email_verified == true; }
     
-    // Simplistic admin check based on email (Wait, prompt says "Include User email from runtime as an admin if the app has an admin feature." Since I don't know the exact admin user's email, I can skip admin updates for now and make the data purely read-only). Or I can use `nakibprince664@gmail.com` based on USER_EMAIL from metadata.
+    // Simplistic admin check based on email
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email == "nakibprince664@gmail.com";
-    }
-
-    // Validation Blueprint for University
-    function isValidUniversity(data) {
-      return data.keys().hasAll(["name", "location", "country", "type", "tier", "tuitionBDT", "acceptanceRate", "scholarshipsAvailable", "imageUrl"])
-        && data.name is string && data.name.size() <= 200
-        && data.location is string && data.location.size() <= 200
-        && data.country is string && data.country.size() <= 100
-        && data.type in ["Public", "Private"]
-        && data.tier in ["Top Tier", "Mid Tier", "Standard"]
-        && data.tuitionBDT is number
-        && data.acceptanceRate is number
-        && data.scholarshipsAvailable is bool
-        && data.imageUrl is string && data.imageUrl.size() <= 1000
-        && (!("requirements" in data) || (data.requirements is map
-          && (!("minGPA" in data.requirements) || data.requirements.minGPA is number)
-          && (!("minIELTS" in data.requirements) || data.requirements.minIELTS is number)
-          && (!("acceptsMOI" in data.requirements) || data.requirements.acceptsMOI is bool)
-          && (!("satRecommended" in data.requirements) || data.requirements.satRecommended is bool)
-        ));
+      return isSignedIn() && request.auth.token.email == "nakibprince666@gmail.com";
     }
 
     match /universities/{universityId} {
-      // Allow read for everyone (even anonymous, for a public catalog of universities)
-      // Actually, per guidelines: "NO BLANKET READS OR CLIENT DELEGATION". But if the universities are genuinely public data, `allow read: if true;` is mathematically correct, though we might restrict to signed in to be safe or just public if it's completely public data. Let's make it public.
       allow read: if true;
-
-      allow create: if isAdmin() && isValidId(universityId) && isValidUniversity(incoming());
-      
-      allow update: if isAdmin() && isValidId(universityId) && isValidUniversity(incoming());
-      
+      allow create: if isAdmin() && isValidId(universityId);
+      allow update: if isAdmin() && isValidId(universityId);
       allow delete: if isAdmin() && isValidId(universityId);
+    }
+
+    match /programs/{programId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidId(programId);
+      allow update: if isAdmin() && isValidId(programId);
+      allow delete: if isAdmin() && isValidId(programId);
     }
   }
 }
